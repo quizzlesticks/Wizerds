@@ -1,0 +1,23 @@
+Stay around an 8x8 base for every cell.
+
+To export:
+INFLATE
+Sprite>Sprite Size
+Set Width and Height to 400%. (This makes every cell 32x32, needs may change for larger sprites)
+
+
+Add a 1Px border around every cell.
+To do this
+Sprite>Canvas Size
+Add Num_Of_Cells_In_Row*2 to the width
+Add Num_Of_Rows*2 to the height
+(For example if we have a walking sprite sheet then it has 8 cells so the canvas size becomes 32*8x32*8 in the INFLATE step and then in this step
+if becomes [32*8]+8*2x[32*8]+1*2 = 272x34px)
+
+Setup the grid to be 34x34.
+Use the marquee tool to center all sprites so they have a 1px border in their cell.
+Press shift+O, click the square, set the color to black and click done.
+
+Add whatever subpixel touches you need
+
+Export just the first frame to a .png.

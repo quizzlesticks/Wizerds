@@ -1,0 +1,26 @@
+{
+  "name": "wizerds",
+  "version": "0.0.1",
+  "description": "\"RoTMG ripoff in JS\"",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/quizzlesticks/Wizerds.git"
+  },
+  "author": "Matt et al.",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/quizzlesticks/Wizerds/issues"
+  },
+  "homepage": "https://github.com/quizzlesticks/Wizerds#readme",
+  "dependencies": {
+    "seedrandom": "^3.0.5"
+  },
+  "devDependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^3.1.0"
+  }
+}

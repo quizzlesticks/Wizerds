@@ -1,2 +1,1 @@
-# Wizerds-client
-RoTMG Ripoff
+:)
