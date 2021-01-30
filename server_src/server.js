@@ -40,6 +40,10 @@ io.on('connection', (socket) => {
         socket.to('main_lobby').emit('player_move', data);
     });
 
+    socket.on('bullet_fire', (data)=> {
+        socket.to('main_lobby').emit('bullet_fire', data);
+    });
+
     socket.once('disconnect', () => {
         if(connected_users[socket.id] != undefined) {
             connected_users_count--;

@@ -26,7 +26,7 @@ class GameManager {
     #num_tiles_vertical;
     #default_player_pos = {x: 7000, y: 12100};
     #bullet_pool;
-    #bullet_pool_size = 10;
+    #bullet_pool_size = 100;
 
     constructor(width=1000, height=800, gui_width=250, smoothing=false) {
         this.#_canvas = document.getElementById('canvas');

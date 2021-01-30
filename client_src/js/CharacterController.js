@@ -10,7 +10,7 @@ class CharacterController{
     #_animator;
 
     #_speed = 6; //4
-    #_dexterity = 30;
+    #_dexterity = 20;
     #_dexterity_counter = 0;
     #_projectile_speed = 8;
     #_projectile_lifetime = 120;
@@ -134,6 +134,7 @@ class CharacterController{
                 const speed_y = this.#_projectile_speed*Math.sin(angle);
                 const damage = this.#_attack_min + Math.random()*(this.#_attack_max-this.#_attack_min);
                 Game.bullet_pool.fire(angle, pos_x, pos_y, speed_x, speed_y, damage, this.#_projectile_lifetime, true);
+                Game.socket.sendBulletFire(angle, pos_x, pos_y, speed_x, speed_y, this.#_projectile_lifetime);
             }
             this.#_dexterity_counter++;
             if(this.#_dexterity_counter == this.#_dexterity) {
