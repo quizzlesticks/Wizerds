@@ -115,17 +115,17 @@ class SpriteSheetManager {
             Game.context.save();
             //get the center of the image to draw
             if(this.#centering) {
-                Game.context.translate(dx + cur.width/2, dy + cur.height/2);
+                Game.context.translate(dx + dWidth/2, dy + dHeight/2);
             } else {
-                Game.context.translate(dx, dy + cur.height/2);
+                Game.context.translate(dx, dy + dHeight/2);
             }
             //rotate
             Game.context.rotate(rotation);
             //move back for draws
             if(this.#centering) {
-                Game.context.translate( -(dx + cur.width/2), -(dy + cur.height/2));
+                Game.context.translate( -(dx + dWidth/2), -(dy + dHeight/2));
             } else {
-                Game.context.translate(-dx, -(dy + cur.height/2));
+                Game.context.translate(-dx, -(dy + dHeight/2));
             }
             //draw it
             if(this.#centering) {

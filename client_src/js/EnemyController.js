@@ -61,13 +61,15 @@ class EnemyController {
             //DELETEME
             if(!this.#lock) {
                 this.#lock = true;
-                this.#bigasslaser.x = this.#position.x;
-                this.#bigasslaser.y = this.#position.y-30;
-                const angle = Math.atan2(-y_delta, -x_delta);
+                const angle = Math.atan2(y_delta, x_delta);
+                this.#bigasslaser.x = this.#position.x + Math.cos(angle)*10;
+                this.#bigasslaser.y = this.#position.y-60+ Math.sin(angle)*10;
                 this.#bigasslaser.rotation = angle;
                 var aud = document.getElementById("audi").play();
             }else {
                 const angle = Math.atan2(-y_delta, -x_delta);
+                this.#bigasslaser.x = this.#position.x + Math.cos(angle)*10;
+                this.#bigasslaser.y = this.#position.y-96+ Math.sin(angle)*10;
                 this.#bigasslaser.rotation = angle;
             }
         }
@@ -100,7 +102,7 @@ class EnemyController {
             Game.ssm.centering = false;
             this.#bigasslaser.drawNext();
             Game.ssm.centering = true;
-            if(this.#bigasslaser.real_frame == 35 && !this.#secondlock){
+            if(this.#bigasslaser.real_frame == 31 && !this.#secondlock){
                 this.#bigasslaser.defineAnimationLoop(AnimationProfiles.BIGASS.LASER.FOREVER);
                 this.#secondlock = true;
             }
