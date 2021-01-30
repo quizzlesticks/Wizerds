@@ -27,3 +27,11 @@ class BulletPool {
         Game.ssm.centering=true;
     }
 }
+
+class BlueSlimePool {
+    #_pool = [];
+
+    constructor() {
+        //Game.ssm.loadFromProfile(AnimationProfiles.);
+    }
+}
