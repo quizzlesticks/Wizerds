@@ -10,6 +10,7 @@ class SocketManager {
         this.#_sock.on('connect', this.onConnection);
         this.#_sock.on('disconnect', this.onDisconnection);
         this.#_sock.on('message', this.printMessage);
+        this.#_sock.on('bullet_fire', this.bulletFire);
     }
 
     get id() {
@@ -22,6 +23,10 @@ class SocketManager {
 
     sendPlayerPos(pos, last_state) {
         this.#_sock.emit("player_move", {last_state: last_state, pos: pos});
+    }
+
+    sendBulletFire(angle, x, y, speed_x, speed_y, lifetime) {
+        this.#_sock.emit("bullet_fire", {angle: angle, x: x, y: y, sx: speed_x, sy: speed_y, life: lifetime})
     }
 
     printMessage(data){
@@ -60,5 +65,9 @@ class SocketManager {
 
     updateNetworkCharactor(data){
         Game.cm.updateNetworkCharactorPosition(data.id, data.last_state, data.pos);
+    }
+
+    bulletFire(data){
+        Game.bullet_pool.fire(data.angle, data.x, data.y, data.sx, data.sy, 0, data.life, false);
     }
 }
