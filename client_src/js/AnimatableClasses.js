@@ -105,6 +105,7 @@ class CharacterAnimatable {
             return undefined;
         }
         this.#_idle = new AnimatableClass(animation_super_profile.Idle, px, py, scale);
+        this.#_idle.defineAnimationLoopFromKey("KeyS");
         this.#_move = new AnimatableClass(animation_super_profile.Move, px, py, scale);
         this.#_attack = new AnimatableClass(animation_super_profile.Attack, px, py, scale);
         this.#_cur_animatable = this.#_idle;
