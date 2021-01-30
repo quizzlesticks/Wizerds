@@ -8,6 +8,8 @@ const connected_users = {};
 var connected_users_count = 0;
 
 app.use(express.static(path.join(__dirname,'../client_src/')));
+//DELETEME
+app.use('/Audio', express.static(path.join(__dirname,'../client_src/assets/audio')));
 app.use('/Spritesheets', express.static(path.join(__dirname,'../client_src/assets/spritesheets')));
 app.use('/fav', express.static(path.join(__dirname,'../client_src/assets/favicon')));
 

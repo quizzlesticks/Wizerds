@@ -20,13 +20,15 @@ class GameManager {
     #_spritefolder = "/Spritesheets";
     #camera_position = { world_space: {x: undefined, y: undefined},
                     screen_space: {x: undefined, y: undefined}};
-    #_mouse_zoner;
+    #_diagonal_zoner;
     #tile_size = 64;
     #num_tiles_horizontal;
     #num_tiles_vertical;
-    #default_player_pos = {x: 7000, y: 12100};
+    #default_player_pos = {x: 30552, y: 26310};//{x: 7000, y: 12100};
     #bullet_pool;
     #bullet_pool_size = 100;
+    #blue_slime_pool;
+    #blue_slime_pool_size = 5;
 
     constructor(width=1000, height=800, gui_width=250, smoothing=false) {
         this.#_canvas = document.getElementById('canvas');
@@ -36,7 +38,7 @@ class GameManager {
         this.smoothing = smoothing;
         this.#camera_position.screen_space.x = this.player_space_width/2;
         this.#camera_position.screen_space.y = this.player_space_height/2;
-        this.#_mouse_zoner = new MouseZoner(this.player_space_width, this.player_space_height, this.#camera_position.screen_space);
+        this.#_diagonal_zoner = new DiagonalZoner(this.player_space_width, this.player_space_height, this.#camera_position.screen_space);
         this.#num_tiles_horizontal = Math.ceil(this.#_width/this.#tile_size)+4;
         if(this.#num_tiles_horizontal%2==0) {this.#num_tiles_horizontal += 1;}
         this.#num_tiles_vertical = Math.ceil(this.#_height/this.#tile_size)+2;
@@ -47,6 +49,8 @@ class GameManager {
     init() {
         this.#_ssm = new SpriteSheetManager();
         this.#_ssm.loadAllCharacterClasses();
+        //DELETEME
+        this.#_ssm.loadFromProfile(AnimationProfiles.BIGASS.LASER);
         this.#_socket = new SocketManager();
         this.#_cm = new CharacterManager();
         this.registerStartupTask();
@@ -57,6 +61,7 @@ class GameManager {
         this.#_map = new MapManager();
         this.#_item_gui = new ItemGui();
         this.#bullet_pool = new BulletPool();
+        this.#blue_slime_pool = new BlueSlimePool();
     }
 
     #_startup_tasks_to_finish = 0;
@@ -68,6 +73,7 @@ class GameManager {
         this.#_startup_tasks_finished += 1;
         if(this.#_startup_tasks_finished == this.#_startup_tasks_to_finish && this.#runWhenFinished != undefined) {
             this.#last_animation_request = window.requestAnimationFrame(this.#runWhenFinished);
+            this.#runBeforeRunFinished();
         }
     }
 
@@ -78,8 +84,13 @@ class GameManager {
     set runWhenFinished(f) {
         this.#runWhenFinished = f;
         if(this.#_startup_tasks_finished == this.#_startup_tasks_to_finish) {
+            this.#runBeforeRunFinished();
             this.#last_animation_request = window.requestAnimationFrame(this.#runWhenFinished);
         }
+    }
+
+    #runBeforeRunFinished() {
+        this.#blue_slime_pool.spawn(this.#_cm.player.position.x-500, this.#_cm.player.position.y-500);
     }
 
     get initialized() {
@@ -150,6 +161,14 @@ class GameManager {
 
     get bullet_pool_size() {
         return this.#bullet_pool_size;
+    }
+
+    get blue_slime_pool() {
+        return this.#blue_slime_pool;
+    }
+
+    get blue_slime_pool_size() {
+        return this.#blue_slime_pool_size;
     }
 
     get menu_background_color() {
@@ -283,12 +302,22 @@ class GameManager {
         return Math.atan2(y,x);
     }
 
-    mouseZone(mp) {
-        return this.#_mouse_zoner.findMouseZone(mp);
+    diagonalZone(p, inverse=false) {
+        return this.#_diagonal_zoner.findDiagonalZone(p, inverse);
+    }
+
+    checkCollision(rect1, rect2) {
+        if (rect1.left < rect2.right &&
+            rect1.right > rect2.left &&
+            rect1.top < rect2.bottom &&
+            rect1.bottom > rect2.top) {
+                return true;
+        }
+        return false;
     }
 }
 
-class MouseZoner {
+class DiagonalZoner {
     #_slope;
     #_top_b;
     #_bottom_b;
@@ -305,42 +334,53 @@ class MouseZoner {
         this.#_y = pos.y;
         this.#_width = width;
         this.#_height = height;
-        this.#updateMouseZones();
+        this.#updateDiagonalZones();
     }
 
-    #updateMouseZones() {
+    #updateDiagonalZones() {
         this.#_slope = this.#_height/this.#_width;
         this.#_top_b = this.#_y - this.#_slope * this.#_x;
         this.#_bottom_b = this.#_y + this.#_slope * this.#_x - this.#_height;
     }
 
-    findMouseZone(mp) {
-        //If we are exactly on the camera return zone 0 (right)
-        if(mp.x == this.#_x && mp.y == this.#_y){
-            return "KeyD";
+    #_keys = ["KeyD", "KeyS", "KeyA", "KeyW"];
+    #_inverse_keys = ["KeyA", "KeyW", "KeyD", "KeyS"];
+    #_cur_keys;
+    //inverse is for enemies because they move toward the player
+    //noninverse is for mouse because player looks toward
+    findDiagonalZone(p, inverse) {
+        if(inverse) {
+            this.#_cur_keys = this.#_inverse_keys;
+        } else {
+            this.#_cur_keys = this.#_keys;
+        }
+        //If we are exactly on the camera return zone down
+        if(p.x == this.#_x && p.y == this.#_y){
+            return this.#_cur_keys[1];
         }
         //If we are under the top line (positive for canvas, in standard cartesian this is the one with negative slope and we are 'under' it)
-        if(mp.y >= this.#topZoningLine(mp.x)) {
+        if(p.y >= this.#topZoningLine(p.x)) {
             //then we are in either zone 2 or 3
             //If we are under the bottom line
-            if(mp.y >= this.#bottomZoningLine(mp.x)) {
+            if(p.y >= this.#bottomZoningLine(p.x)) {
                 //We are in zone 3
-                return "KeyS";
+                return this.#_cur_keys[1];
             } else {
                 //Otherwise we must be in zone 2
-                return "KeyA";
+                return this.#_cur_keys[2];
             }
         } else {
             //Otherwise we are in either zone 0 or 1
             //If we are under the bottom line
-            if(mp.y >= this.#bottomZoningLine(mp.x)) {
+            if(p.y >= this.#bottomZoningLine(p.x)) {
                 //We are in zone 0
-                return "KeyD";
+                return this.#_cur_keys[0];
             } else {
                 //Otherwise we are in zone 1
-                return "KeyW";
+                return this.#_cur_keys[3];
             }
         }
+        console.log("Here");
     }
 
     #topZoningLine(x) {

@@ -90,6 +90,7 @@ class SpriteSheetManager {
     drawSprite(id, index, dx, dy, rotation, dWidth = 0, dHeight = 0) {
         const cur = this.#_SpriteSheetList[id];
         if(index >= cur.cols*cur.rows){
+            console.log(id);
             throw new Error("Requested unobtainable sprite.");
         }
         if(!dHeight && dWidth){
@@ -113,11 +114,19 @@ class SpriteSheetManager {
             //start by saving ctx so we can reset
             Game.context.save();
             //get the center of the image to draw
-            Game.context.translate(dx + cur.width/2, dy + cur.height/2);
+            if(this.#centering) {
+                Game.context.translate(dx + cur.width/2, dy + cur.height/2);
+            } else {
+                Game.context.translate(dx, dy + cur.height/2);
+            }
             //rotate
             Game.context.rotate(rotation);
             //move back for draws
-            Game.context.translate( -(dx + cur.width/2), -(dy + cur.height/2));
+            if(this.#centering) {
+                Game.context.translate( -(dx + cur.width/2), -(dy + cur.height/2));
+            } else {
+                Game.context.translate(-dx, -(dy + cur.height/2));
+            }
             //draw it
             if(this.#centering) {
                 Game.context.drawImage(cur.img, (index%cur.cols)*cur.width, Math.floor(index/cur.cols)*cur.height, cur.width, cur.height, dx-dWidth/2, dy-dHeight/2, dWidth, dHeight);

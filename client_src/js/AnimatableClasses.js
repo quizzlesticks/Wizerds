@@ -10,19 +10,15 @@ class AnimatableClass {
     //This is in world space
     #position = {x: undefined, y: undefined};
     #rotation = 0;
-    #_x_centering_offset;
-    #_y_centering_offset;
     #scale;
 
-    constructor(animation_profile, px, py, scale=0) {
+    constructor(animation_profile, px, py, scale) {
         this.#_animation_profile = animation_profile;
         this.#_frame_delay = this.#_animation_profile.frame_delay;
         if(!scale){
             scale = this.#_animation_profile.default_scale;
         }
         this.#scale = scale;
-        this.#_x_centering_offset = this.#_animation_profile.sprite_width*this.#scale/2;
-        this.#_y_centering_offset = this.#_animation_profile.sprite_height*this.#scale/2;
         this.x = px;
         this.y = py;
     }
@@ -47,18 +43,31 @@ class AnimatableClass {
         this.#rotation = r;
     }
 
-    defineAnimationLoop(loop) {
+    get frame() {
+        return this.#_animloop_cur;
+    }
+
+    get real_frame() {
+        return this.#_animloop[this.#_animloop_cur];
+    }
+
+    //reset==false is for defining the animation loop with reseting cur
+    //this way wiggling the mouse or moving a bunch around enemies
+    //doesn't cause the animation to restart constantly
+    defineAnimationLoop(loop, reset=true) {
         this.#_animloop = loop;
         this.#_animloop_length = loop.length;
-        this.#_animloop_cur = 0;
+        if(reset) {
+            this.#_animloop_cur = 0;
+        }
     }
 
     restartAnimationLoop() {
         this.#_animloop_cur = 0;
     }
 
-    defineAnimationLoopFromKey(key) {
-        this.defineAnimationLoop(this.#_animation_profile.animations[key]);
+    defineAnimationLoopFromKey(key, reset) {
+        this.defineAnimationLoop(this.#_animation_profile.animations[key], reset);
     }
 
     draw(index) {
@@ -98,9 +107,8 @@ class CharacterAnimatable {
     #_cur_animatable;
     #last_state = {state: "idle", key: "KeyS"}; //idle, attack, move + key
 
-    constructor(player_class, px, py, scale=0) {
-        var animation_super_profile;
-        if(!(animation_super_profile = AnimationProfiles.CharacterProfiles[player_class])) {
+    constructor(animation_super_profile, px, py, scale) {
+        if(!animation_super_profile) {
             throw new Error("Trying to load unloadable class.");
             return undefined;
         }
@@ -115,6 +123,10 @@ class CharacterAnimatable {
         return this.#last_state;
     }
 
+    get frame() {
+        return this.#_cur_animatable.frame;
+    }
+
     draw() {
         //console.log(this.#_cur_animatable);
         this.#_cur_animatable.drawNext();
@@ -126,21 +138,34 @@ class CharacterAnimatable {
         }
         switch(type) {
             case "attack":
-                this.#_cur_animatable = this.#_attack;
-                this.#_attack.defineAnimationLoopFromKey(key);
-                this.#last_state.state = "attack";
+                //don't reset animation if we only changed direction
+                if(this.#last_state.state == "attack") {
+                    this.#_attack.defineAnimationLoopFromKey(key, false);
+                } else {
+                    this.#_cur_animatable = this.#_attack;
+                    this.#_attack.defineAnimationLoopFromKey(key);
+                    this.#last_state.state = "attack";
+                }
                 this.#last_state.key = key;
                 break;
             case "idle":
-                this.#_cur_animatable = this.#_idle;
-                this.#_idle.defineAnimationLoopFromKey(key);
-                this.#last_state.state = "idle";
+                if(this.#last_state.state == "idle") {
+                    this.#_idle.defineAnimationLoopFromKey(key, false);
+                } else {
+                    this.#_cur_animatable = this.#_idle;
+                    this.#_idle.defineAnimationLoopFromKey(key);
+                    this.#last_state.state = "idle";
+                }
                 this.#last_state.key = key;
                 break;
             case "move":
-                this.#_cur_animatable = this.#_move;
-                this.#_move.defineAnimationLoopFromKey(key);
-                this.#last_state.state = "move";
+                if(this.#last_state.state == "move") {
+                    this.#_move.defineAnimationLoopFromKey(key, false);
+                } else {
+                    this.#_cur_animatable = this.#_move;
+                    this.#_move.defineAnimationLoopFromKey(key);
+                    this.#last_state.state = "move";
+                }
                 this.#last_state.key = key;
                 break;
             default:

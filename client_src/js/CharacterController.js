@@ -20,7 +20,7 @@ class CharacterController{
     #_attack_max = 20;
 
     constructor(player_class, x, y, scale=0) {
-        this.#_animator = new CharacterAnimatable(player_class, this.x, this.y);
+        this.#_animator = new CharacterAnimatable(AnimationProfiles.CharacterProfiles[player_class], this.x, this.y);
         this.x = x;
         this.y = y;
         this.updateAnimation = this.updateAnimation.bind(this);
@@ -195,14 +195,14 @@ class CharacterController{
         if(event.type == "mousedown") {
             this.#_mousedown = true;
             this.#_last_mousedown_position = Game.mouseToScreenSpace({x: event.clientX, y: event.clientY});
-            this.#_zone = Game.mouseZone(this.#_last_mousedown_position);
+            this.#_zone = Game.diagonalZone(this.#_last_mousedown_position);
             this.#_animator.animate("attack", this.#_zone);
             return;
         }
         if(this.#_mousedown) {
             if(event.type == "mousemove") {
                 this.#_last_mousedown_position = Game.mouseToScreenSpace({x: event.clientX, y: event.clientY});
-                var zone = Game.mouseZone(this.#_last_mousedown_position);
+                var zone = Game.diagonalZone(this.#_last_mousedown_position);
                 if(zone != this.#_zone) {
                     this.#_animator.animate("attack", zone);
                     this.#_zone = zone;
@@ -253,7 +253,7 @@ class NetworkCharacterController{
             x = Game.default_player_position.x;
             y = Game.default_player_position.y;
         }
-        this.#_animator = new CharacterAnimatable(player_class, x, y);
+        this.#_animator = new CharacterAnimatable(AnimationProfiles.CharacterClasses[player_class], x, y);
         this.x = x;
         this.y = y;
         this.draw = this.draw.bind(this);

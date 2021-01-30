@@ -13,15 +13,15 @@ class BulletClass {
     #player_fired = false;
 
     #_animatable;
-    #_bounding_rectangle = {top: undefined, bottom: undefined, left: undefined, right: undefined};
+    #bounding_rectangle = {top: undefined, bottom: undefined, left: undefined, right: undefined};
 
     constructor(profile) {
         this.#_animatable = new AnimatableClass(profile, 0, 0);
         this.#_animatable.defineAnimationLoop(profile.animation);
-        this.#_bounding_rectangle.top = this.#y - profile.sprite_height*profile.default_scale/2;
-        this.#_bounding_rectangle.bottom = this.#y + profile.sprite_height*profile.default_scale/2;
-        this.#_bounding_rectangle.left = this.#x - profile.sprite_width*profile.default_scale/2;
-        this.#_bounding_rectangle.right = this.#x + profile.sprite_width*profile.default_scale/2;
+        this.#bounding_rectangle.top = this.#y - profile.sprite_height*profile.default_scale/2;
+        this.#bounding_rectangle.bottom = this.#y + profile.sprite_height*profile.default_scale/2;
+        this.#bounding_rectangle.left = this.#x - profile.sprite_width*profile.default_scale/2;
+        this.#bounding_rectangle.right = this.#x + profile.sprite_width*profile.default_scale/2;
     }
 
     get active() {
@@ -29,24 +29,24 @@ class BulletClass {
     }
 
     get bounding_rectangle() {
-        return this.#_bounding_rectangle;
+        return this.#bounding_rectangle;
     }
 
     set x(x) {
-        this.#_bounding_rectangle.left += x-this.#x;
-        this.#_bounding_rectangle.right += x-this.#x;
+        this.#bounding_rectangle.left += x-this.#x;
+        this.#bounding_rectangle.right += x-this.#x;
         this.#x = x;
         this.#_animatable.x = x;
     }
 
     set y(y) {
-        this.#_bounding_rectangle.top += y-this.#y;
-        this.#_bounding_rectangle.bottom += y-this.#y;
+        this.#bounding_rectangle.top += y-this.#y;
+        this.#bounding_rectangle.bottom += y-this.#y;
         this.#y = y;
         this.#_animatable.y = y;
     }
 
-    update(angle, x, y, sx, sy, damage, lifetime, player_fired) {
+    activate(angle, x, y, sx, sy, damage, lifetime, player_fired) {
         this.#_animatable.rotation = angle;
         this.#_animatable.restartAnimationLoop();
         this.x = x;

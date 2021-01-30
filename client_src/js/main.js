@@ -30,6 +30,7 @@ function animate() {
     Game.map.draw();
     Game.cm.drawAllCharacters();
     Game.bullet_pool.draw();
+    Game.blue_slime_pool.draw();
     Game.item_gui.draw();
     Game.ssm.drawSprite("bow",0,Game.player_space_width+50,600);
     Game.ssm.drawSprite("bow",0,Game.player_space_width+50+50,600);
