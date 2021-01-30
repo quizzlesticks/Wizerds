@@ -1,4 +1,4 @@
-class Bullet {
+class BulletClass {
     //Please always use my setter for x and y, the bounding rect gets :( when
     //you don't
     #active = false;
@@ -16,11 +16,16 @@ class Bullet {
     #_bounding_rectangle = {top: undefined, bottom: undefined, left: undefined, right: undefined};
 
     constructor(profile) {
-        this.#_animatable = new AnimatableClass(ssm, profile, 0, 0);
+        this.#_animatable = new AnimatableClass(profile, 0, 0);
+        this.#_animatable.defineAnimationLoop(profile.animation.start, profile.animation.stop);
         this.#_bounding_rectangle.top = this.#y - profile.sprite_height*profile.default_scale/2;
         this.#_bounding_rectangle.bottom = this.#y + profile.sprite_height*profile.default_scale/2;
         this.#_bounding_rectangle.left = this.#x - profile.sprite_width*profile.default_scale/2;
         this.#_bounding_rectangle.right = this.#x + profile.sprite_width*profile.default_scale/2;
+    }
+
+    get active() {
+        return this.#active;
     }
 
     get bounding_rectangle() {
@@ -42,7 +47,8 @@ class Bullet {
     }
 
     update(angle, x, y, sx, sy, damage, lifetime, player_fired) {
-        this.#angle = angle;
+        this.#_animatable.rotation = angle;
+        this.#_animatable.restartAnimationLoop();
         this.x = x;
         this.y = y;
         this.#speed_x = sx;
@@ -54,12 +60,12 @@ class Bullet {
         this.#active = true;
     }
 
-    drawNext() {
+    draw() {
         //draw it
-        this.#_animatable.drawNextRotate(this.#angle);
+        this.#_animatable.drawNext();
         //update it
-        this.x += this.#speed_x;
-        this.y += this.#speed_y;
+        this.x = this.#x + this.#speed_x;
+        this.y = this.#y + this.#speed_y;
 
         this.#lifetime_counter++;
         if(this.#lifetime_counter == this.#lifetime) {

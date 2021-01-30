@@ -14,6 +14,8 @@ class CharacterController{
     #_dexterity_counter = 0;
     #_projectile_speed = 8;
     #_projectile_lifetime = 120;
+    #_projectile_spawn_radius = 50;
+    #_projectile_spawn_offset = {x: 15, y: 10};
     #_attack_min = 10;
     #_attack_max = 20;
 
@@ -83,7 +85,7 @@ class CharacterController{
     #_last_state_sent = undefined;
     #_last_key_sent = undefined;
     #_last_mousedown_position = {x: undefined, y: undefined};
-    updatePlayerPosition() {
+    updatePlayer() {
         if(this.#_key_states["KeyA"]) {
             this.x -= this.#_speed;
         }
@@ -105,13 +107,7 @@ class CharacterController{
             this.#_last_state_sent = last_state.state;
             this.#_last_key_sent = last_state.key;
         }
-    }
-
-    draw() {
-
-        this.#_animator.draw();
-
-        if(this.#_animator.last_state == "attack") {
+        if(this.#_animator.last_state.state == "attack") {
             //we need to do this:
             //dex roll (check if counter == dex)
             //BUT dex roll needs to always count to dex after a fire so
@@ -124,7 +120,7 @@ class CharacterController{
             //      whether the boolet pierces
             //      other special properties
             //      angle of travel
-            //      bullet positionition
+            //      bullet position
             //  we just have to generate this information
             //  we will pass it to the bullet pool which will draw Everything
             //  and find a bullet etc.
@@ -132,8 +128,8 @@ class CharacterController{
             if(this.#_dexterity_counter == 0){
                 //fire
                 const angle = Game.mouseTangent(this.#_last_mousedown_position);
-                const pos_x = this.x;
-                const pos_y = this.y;
+                const pos_x = this.x + Math.cos(angle)*this.#_projectile_spawn_radius - this.#_projectile_spawn_offset.x;
+                const pos_y = this.y + Math.sin(angle)*this.#_projectile_spawn_radius - this.#_projectile_spawn_offset.y;
                 const speed_x = this.#_projectile_speed*Math.cos(angle);
                 const speed_y = this.#_projectile_speed*Math.sin(angle);
                 const damage = this.#_attack_min + Math.random()*(this.#_attack_max-this.#_attack_min);
@@ -152,6 +148,10 @@ class CharacterController{
                 this.#_dexterity_counter = 0;
             }
         }
+    }
+
+    draw() {
+        this.#_animator.draw();
         // if(Game.debug) {
         //     //intersecting lines on player
         //     var ctx = Game.context;

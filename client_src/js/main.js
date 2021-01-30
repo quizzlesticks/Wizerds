@@ -20,7 +20,7 @@ Game.runWhenFinished = animate;
 
 function animate() {
     Game.clearWindow("red");
-    Game.cm.player.updatePlayerPosition();
+    Game.cm.player.updatePlayer();
     const up = Game.cm.player.position;
     const mp = Game.worldToMapSpace(up);
     const gridded_mp = {x: Math.floor(mp.x), y: Math.floor(mp.y)};
@@ -28,7 +28,8 @@ function animate() {
     const rp = Game.worldToScreenSpace(Game.mapToWorldSpace(starting_mp));
     Game.context.drawImage(map_image, starting_mp.x, starting_mp.y, Game.num_tiles_horizontal, Game.num_tiles_vertical, rp.x, rp.y, Game.num_tiles_horizontal*Game.tile_size, Game.num_tiles_vertical*Game.tile_size);
     Game.map.draw();
-    Game.cm.drawAllCharacters(Game.socket.id);
+    Game.cm.drawAllCharacters();
+    Game.bullet_pool.draw();
     Game.item_gui.draw();
     Game.ssm.drawSprite("bow",0,Game.player_space_width+50,600);
     Game.ssm.drawSprite("bow",0,Game.player_space_width+50+50,600);

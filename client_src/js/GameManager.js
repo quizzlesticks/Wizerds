@@ -26,6 +26,7 @@ class GameManager {
     #num_tiles_vertical;
     #default_player_pos = {x: 7000, y: 12100};
     #bullet_pool;
+    #bullet_pool_size = 10;
 
     constructor(width=1000, height=800, gui_width=250, smoothing=false) {
         this.#_canvas = document.getElementById('canvas');
@@ -45,13 +46,13 @@ class GameManager {
 
     init() {
         this.#_ssm = new SpriteSheetManager();
-        this.#_ssm.loadAllCharacterClasses(AnimationProfiles);
+        this.#_ssm.loadAllCharacterClasses();
         this.#_socket = new SocketManager();
         this.#_cm = new CharacterManager();
         this.registerStartupTask();
         this.#_char_select = new CharSelectGui(() =>
               {Game.cm.addPlayerCharacter(Game.char_select.selected_char);
-               Game.socket.sendCharSelect(Game.char_select.selected_char, Game.cm.player.pos, {state: "idle", key: "KeyS"})
+               Game.socket.sendCharSelect(Game.char_select.selected_char, Game.cm.player.position, {state: "idle", key: "KeyS"})
                Game.startupTaskFinished(); });
         this.#_map = new MapManager();
         this.#_item_gui = new ItemGui();
@@ -145,6 +146,10 @@ class GameManager {
 
     get bullet_pool() {
         return this.#bullet_pool;
+    }
+
+    get bullet_pool_size() {
+        return this.#bullet_pool_size;
     }
 
     get menu_background_color() {

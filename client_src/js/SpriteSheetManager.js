@@ -52,17 +52,27 @@ class SpriteSheetManager {
         }
     }
 
-    loadAllCharacterClasses(AnimProfiles) {
-        var k_array = Object.keys(AnimProfiles.CharacterClasses);
-        var prof;
+    loadAllCharacterClasses() {
+        var k_array = Object.keys(AnimationProfiles.CharacterProfiles);
         var kk_array;
         for(var i=0; i<k_array.length; i++){
-            kk_array = Object.keys(AnimProfiles.CharacterClasses[k_array[i]])
+            kk_array = Object.keys(AnimationProfiles.CharacterProfiles[k_array[i]])
             for(var j=0; j<kk_array.length; j++) {
-                prof = AnimProfiles.CharacterClasses[k_array[i]][kk_array[j]];
-                this.load(prof.filename, prof.id, prof.sprite_width, prof.sprite_height, prof.sprite_rows, prof.sprite_columns);
+                this.loadFromProfile(AnimationProfiles.CharacterProfiles[k_array[i]][kk_array[j]]);
+
             }
         }
+    }
+
+    loadAllBullets() {
+        var k_array = Object.keys(AnimationProfiles.BulletProfiles);
+        for(var i=0; i<k_array.length; i++){
+            this.loadFromProfile(AnimationProfiles.BulletProfiles[k_array[i]]);
+        }
+    }
+
+    loadFromProfile(p) {
+        this.load(p.filename, p.id, p.sprite_width, p.sprite_height, p.sprite_rows, p.sprite_columns);
     }
 
     load(filename, id, width, height, rows, cols) {
@@ -103,7 +113,7 @@ class SpriteSheetManager {
             //get the center of the image to draw
             Game.context.translate(dx + cur.width/2, dy + cur.height/2);
             //rotate
-            Game.context.rotate(angle);
+            Game.context.rotate(rotation);
             //move back for draws
             Game.context.translate( -(dx + cur.width/2), -(dy + cur.height/2));
             //draw it
