@@ -1,5 +1,5 @@
 const AnimationProfiles = {
-    CharacterClasses: {
+    CharacterProfiles: {
         RedRidingHood: {
             Move: {
                 id: "RedRidingHoodMove",
@@ -90,8 +90,22 @@ const AnimationProfiles = {
                 animations: {"KeyS": {start: 0, stop: 0},
                               "KeyD": {start: 1, stop: 1},
                               "KeyA": {start: 2, stop: 2},
-                              "KeyW": {start: 3, stop: 3}},
+                              "KeyW": {start: 3, stop: 3}}
             }
+        }
+    },
+
+    BulletProfiles: {
+        BlueBullet: {
+            id: "BlueBullet",
+            sprite_width: 34,
+            sprite_height: 18,
+            sprite_columns: 4,
+            sprite_rows: 1,
+            frame_delay: 3,
+            default_scale: 1.2,
+            filename: "/Spritesheets/BlueBullet.png",
+            animation: {start: 0, stop: 3}
         }
     }
 }

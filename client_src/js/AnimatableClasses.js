@@ -56,12 +56,15 @@ class AnimatableClass {
         this.#_animloop_end = end;
     }
 
+    restartAnimationLoop() {
+        this.#_animloop_cur = this.#_animloop_start;
+    }
+
     defineAnimationLoopFromKey(key) {
         this.defineAnimationLoop(this.#_animation_profile.animations[key].start, this.#_animation_profile.animations[key].stop);
     }
 
     draw(index) {
-        //we must translate to screen space
         const sp = Game.worldToScreenSpace({x: this.x, y: this.y});
         Game.ssm.drawSprite(this.#_animation_profile.id, index, sp.x, sp.y, this.#rotation, this.#scale);
     }
@@ -79,10 +82,14 @@ class AnimatableClass {
     }
 
     drawPrev() {
-        Game.ssm.drawSprite(this.#_animation_profile.id, this.#_animloop_cur, this.#position.real.x, this.#position.real.y, this.#scale);
-        this.#_animloop_cur -= 1;
+        this.draw(this.#_animloop_cur)
+        this.#_frame_delay_cur += 1;
+        if(this.#_frame_delay_cur > this.#_frame_delay){
+            this.#_animloop_cur -= 1;
+            this.#_frame_delay_cur = 0;
+        }
         if(this.#_animloop_cur < this.#_animloop_start){
-            this.#_animloop_cur = this.#_animloop_end;
+            this.#_animloop_cur = this.#_animloop_start;
         }
     }
 }
@@ -96,7 +103,7 @@ class CharacterAnimatable {
 
     constructor(player_class, px, py, scale=0) {
         var animation_super_profile;
-        if(!(animation_super_profile = AnimationProfiles.CharacterClasses[player_class])) {
+        if(!(animation_super_profile = AnimationProfiles.CharacterProfiles[player_class])) {
             throw new Error("Trying to load unloadable class.");
             return undefined;
         }
@@ -111,6 +118,7 @@ class CharacterAnimatable {
     }
 
     draw() {
+        //console.log(this.#_cur_animatable);
         this.#_cur_animatable.drawNext();
     }
 

@@ -48,6 +48,7 @@ class CharSelectGui {
     start() {
         window.addEventListener("mousemove", this.draw);
         window.addEventListener("mousedown", this.draw);
+        this.draw({clientX: 0, clientY: 0});
     }
 
     draw(e) {

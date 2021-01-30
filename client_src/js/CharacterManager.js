@@ -51,13 +51,15 @@ class CharacterManager {
         return this.#player.post_update_position;
     }
 
-    drawAllCharacters(id) {
+    drawAllCharacters() {
         var keys = Object.keys(this.#_char_list);
         for(var i = 0; i < keys.length; i++) {
-            if(keys[i] != id){
+            if(keys[i] != Game.socket.id){
                 this.#_char_list[keys[i]].draw();
             }
         }
-        this.#_char_list[id].draw();
+        if(this.#_char_list[Game.socket.id] != undefined) {
+            this.#_char_list[Game.socket.id].draw();
+        }
     }
 }
