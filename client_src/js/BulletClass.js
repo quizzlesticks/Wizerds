@@ -1,4 +1,4 @@
-class Bullet() {
+class Bullet {
     //Please always use my setter for x and y, the bounding rect gets :( when
     //you don't
     #active = false;
@@ -15,7 +15,7 @@ class Bullet() {
     #_animatable;
     #_bounding_rectangle = {top: undefined, bottom: undefined, left: undefined, right: undefined};
 
-    constructor(ssm, profile) {
+    constructor(profile) {
         this.#_animatable = new AnimatableClass(ssm, profile, 0, 0);
         this.#_bounding_rectangle.top = this.#y - profile.sprite_height*profile.default_scale/2;
         this.#_bounding_rectangle.bottom = this.#y + profile.sprite_height*profile.default_scale/2;

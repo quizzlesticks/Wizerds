@@ -1,6 +1,5 @@
 class MapManager {
 
-	#_win;
 	#_deli;
 	#_path = {deli: undefined, voronoi: undefined};
 	#_voronoi;
@@ -13,8 +12,7 @@ class MapManager {
 	#_tile_size = 128;
 	#_last_guess;
 
-	constructor(win, radius=30) {
-		this.#_win = win;
+	constructor(radius=30) {
 		this.randomize(radius);
 		this.relaxe(6);
 		this.#_regions = new Array(this.number_of_cells);
@@ -48,31 +46,30 @@ class MapManager {
 	}
 
 	loadRegionTiles(p) {
-		const ssm = this.#_win.ssm;
 		for(var i = 0; i < this.#_region_filenames.length; i++) {
 			if(this.#_region_filenames[i] != undefined) {
-				ssm.load(this.#_region_filenames[i], "Tile" + i, this.#_win.tile_size, this.#_win.tile_size, 1, 1);
+				Game.ssm.load(this.#_region_filenames[i], "Tile" + i, Game.tile_size, Game.tile_size, 1, 1);
 			}
 		}
 	}
 
-	draw(player_pos) {
-		//console.log(player_pos);
-		const rp = this.#_win.relativeToCamera(player_pos);
-		//Since we draw one this.#_win.tile_size size tile for every pixel
+	draw() {
+		//Since we draw one Game.tile_size size tile for every pixel
 		//of the map we need to convert the players position to the map
 		//position
-		const map_pos = this.#_win.positionToMapPosition(player_pos);
-		const gridded_map_pos = {x: Math.floor(map_pos.x), y: Math.floor(map_pos.y)};
-		const start_map_pos = {x: gridded_map_pos.x - Math.floor(this.#_win.num_tiles_horizontal/2), y: gridded_map_pos.y - Math.floor(this.#_win.num_tiles_vertical/2)};
-		for (var j = 0; j < this.#_win.num_tiles_vertical; j++) {
-			for (var i = 0; i < this.#_win.num_tiles_horizontal; i++) {
+		const map_pos = Game.worldToMapSpace(Game.camera_position_world);
+		const start_map_pos = {x: Math.floor(map_pos.x) - Math.floor(Game.num_tiles_horizontal/2), y: Math.floor(map_pos.y) - Math.floor(Game.num_tiles_vertical/2)};
+		Game.ssm.centering = false;
+		for (var j = 0; j < Game.num_tiles_vertical; j++) {
+			for (var i = 0; i < Game.num_tiles_horizontal; i++) {
 				const cur_region = this.regionAtPointWithMemory(start_map_pos.x + i, start_map_pos.y + j);
 				if(this.#_region_filenames[cur_region] != undefined) {
-					this.#_win.ssm.drawSprite("Tile" + cur_region, 0, (start_map_pos.x+i)*this.#_win.tile_size+rp.x, (start_map_pos.y+j)*this.#_win.tile_size+rp.y);
+					const np = Game.worldToScreenSpace(Game.mapToWorldSpace({x: start_map_pos.x + i, y: start_map_pos.y + j}));
+					Game.ssm.drawSprite("Tile" + cur_region, 0, np.x, np.y);
 				}
 			}
 		}
+		Game.ssm.centering = true;
 	}
 
 	regionAtPointWithMemory(x,y) {
@@ -110,9 +107,9 @@ class MapManager {
 	}
 
 	render() {
-		this.#_win.clearWindow("white");
+		Game.clearWindow("white");
 		this.drawRegions();
-		if(this.#_win.debug) {
+		if(Game.debug) {
 			this.drawTriangles();
 			this.drawCells();
 			this.drawPoints();
@@ -121,8 +118,8 @@ class MapManager {
 
 	assignRegions() {
 		//Assigning deep ocean to all cells that have a point on the wall.
-		const width = this.#_win.width;
-		const height = this.#_win.height;
+		const width = Game.width;
+		const height = Game.height;
 		for(let cur_cell = 0; cur_cell < this.number_of_cells; cur_cell++) {
 			const cell_vertices = this.#_voronoi.cellPolygon(cur_cell);
 			for (var i = 0; i < cell_vertices.length; i++) {
@@ -206,23 +203,23 @@ class MapManager {
 	}
 
 	animateDrawUnderCell(event) {
-	     const pos = this.#_win.mouseToCanvas({x: event.clientX, y: event.clientY});
+	     const pos = Game.mouseToCanvas({x: event.clientX, y: event.clientY});
 	     console.log(pos);
 	     this.drawRegions();
 	     this.drawUnderCell(pos.x, pos.y);
 	}
 
 	drawUnderCell(x, y) {
-		if(x > this.#_win.width || x < 0 || y > this.#_win.height || y < 0) {
-			this.#_win.clearWindow("white");
+		if(x > Game.width || x < 0 || y > Game.height || y < 0) {
+			Game.clearWindow("white");
 			this.drawTriangles();
 			this.drawCells();
 			this.drawPoints();
 			return;
 		}
-		//this.#_win.clearWindow("white");
+		//Game.clearWindow("white");
 		var point = this.#_deli.find(x, y);
-		var ctx = this.#_win.context;
+		var ctx = Game.context;
 		ctx.save();
 		ctx.fillStyle = "#0000ff";
 		ctx.beginPath();
@@ -243,7 +240,7 @@ class MapManager {
 	}
 
 	drawTriangles() {
-		var ctx = this.#_win.context;
+		var ctx = Game.context;
 		ctx.save();
 		ctx.strokeStyle = "black";
 		ctx.stroke(this.#_path.deli);
@@ -252,7 +249,7 @@ class MapManager {
 
 	drawCellWithFill(cell, fill_color) {
 		const vertices = this.#_voronoi.cellPolygon(cell);
-		const ctx = this.#_win.context;
+		const ctx = Game.context;
 		ctx.save();
 		ctx.fillStyle = fill_color;
 		ctx.beginPath();
@@ -270,7 +267,7 @@ class MapManager {
 	}
 
 	drawCells() {
-		var ctx = this.#_win.context;
+		var ctx = Game.context;
 		ctx.save();
 		ctx.strokeStyle = "red";
 		ctx.stroke(this.#_path.voronoi);
@@ -279,7 +276,7 @@ class MapManager {
 	}
 
 	drawPoints(rad=2) {
-		var ctx = this.#_win.context;
+		var ctx = Game.context;
 		ctx.save();
 		ctx.fillStyle = "#ff0000";
 		for (var i = 0; i < this.points.length; i+=2) {
@@ -291,9 +288,9 @@ class MapManager {
 	}
 
 	randomize(radius=50) {
-		var randomizer = poissonDiscSampler(this.#_win.width+this.#_margin_bleed, this.#_win.height+this.#_margin_bleed, radius)
-		var width = this.#_win.width;
-		var height = this.#_win.height;
+		var randomizer = poissonDiscSampler(Game.width+this.#_margin_bleed, Game.height+this.#_margin_bleed, radius)
+		var width = Game.width;
+		var height = Game.height;
 		const a = [];
 		var rando = undefined;
 		outerloop: while(1){
@@ -302,16 +299,16 @@ class MapManager {
 				if(rando == undefined) {break outerloop;}
 				rando = rando["add"];
 			}while(rando == undefined)
-			if(rando[0] > this.#_win.width + this.#_margin_bleed/2 ||
+			if(rando[0] > Game.width + this.#_margin_bleed/2 ||
 			   rando[0] < -this.#_margin_bleed/2 ||
-		   	   rando[1] > this.#_win.height + this.#_margin_bleed/2 ||
+		   	   rando[1] > Game.height + this.#_margin_bleed/2 ||
 		       rando[1] < -this.#_margin_bleed/2) {
 				   continue;
 			   }
 			a.push([Math.round(rando[0])-this.#_margin_bleed/2, Math.round(rando[1])-this.#_margin_bleed/2]);
 		}
 		this.#_deli = d3.Delaunay.from(a);
-		this.#_voronoi = this.#_deli.voronoi([0,0,this.#_win.width, this.#_win.height]);
+		this.#_voronoi = this.#_deli.voronoi([0,0,Game.width, Game.height]);
 		this.#_path.deli = new Path2D(this.#_deli.render());
 		this.#_path.voronoi = new Path2D(this.#_voronoi.render());
 	}
@@ -325,15 +322,16 @@ function* poissonDiscSampler(width, height, radius) {
 	const gridHeight = Math.ceil(height / cellSize);
 	const grid = new Array(gridWidth * gridHeight);
 	const queue = [];
+	const pRNG = new Math.seedrandom(Game.seed);
 
 	// Pick the first sample.
 	yield {add: sample(width / 2 , height / 2, null)};
 
 	// Pick a random existing sample from the queue.
 	pick: while (queue.length) {
-		const i = Math.random() * queue.length | 0;
+		const i = pRNG() * queue.length | 0;
 		const parent = queue[i];
-		const seed = Math.random();
+		const seed = pRNG();
 		const epsilon = 0.0000001;
 
 		// Make a new candidate.

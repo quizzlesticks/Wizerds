@@ -1,0 +1,23 @@
+So the game manager (currently called WindowManager) should have knowledge
+of the world space and the screenspace. Therefore, it should be our translational
+unit.
+
+The SSM should not have any knowledge of the world space, it only knows screen
+space. Therefore, all calls to drawSprite should be in screen space.
+The SSM also doesn't know anything about current animation states, it just knows
+what each animation index should draw to the screen.
+
+Everything that is or has an Animator is specifically in world space.
+
+The camera position will be the players position. If we move the player position
+we move both the players position in the CharacterController and we move the
+cameras position in the WindowManager.
+
+When we draw an animatable we make a call to the SSM but pass the world_space
+position to the WindowManager to have it translated to screen space.
+
+Positions passed to the SSM are taken as the position where we would like to
+center our sprite
+
+Every "pixel" or point on the game map corresponds to 128 pixels or points
+in the world space. The WindowManager should also handle these translations.

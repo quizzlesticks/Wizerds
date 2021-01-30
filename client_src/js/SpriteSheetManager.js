@@ -27,15 +27,15 @@ class SpriteSheet {
 }
 
 class SpriteSheetManager {
+    #centering = true;
     #loaded_count = 0;
     #loading_count = 0;
     #finished_loading = false;
     #finished_new_loading = false;
     #throwaway_callback = true;
-    constructor(ctx, throwaway_callback = true) {
+    constructor(throwaway_callback = true) {
         this.SpriteSheetList = new Map();
         this.imgLoaded = this.imgLoaded.bind(this);
-        this.ctx = ctx;
         this.#throwaway_callback = throwaway_callback;
     }
 
@@ -75,7 +75,7 @@ class SpriteSheetManager {
         return this.SpriteSheetList[id];
     }
 
-    drawSprite(id, index, dx, dy, dWidth = 0, dHeight = 0) {
+    drawSprite(id, index, dx, dy, rotation, dWidth = 0, dHeight = 0) {
         const cur = this.SpriteSheetList[id];
         if(index >= cur.cols*cur.rows){
             throw new Error("Requested unobtainable sprite.");
@@ -92,43 +92,35 @@ class SpriteSheetManager {
                 dHeight = cur.height;
             }
         }
-        this.ctx.drawImage(cur.img, (index%cur.cols)*cur.width, Math.floor(index/cur.cols)*cur.height, cur.width, cur.height, dx, dy, dWidth, dHeight);
-    }
-
-    drawRotatedSprite(id, index, dx, dy, angle, dWidth=0, dHeight=0){
-        const cur = this.SpriteSheetList[id];
-        if(index >= cur.cols*cur.rows){
-            throw new Error("Requested unobtainable sprite.");
-        }
-        if(!dHeight && dWidth){
-            //If only one scaling attribute is given take it as a scaling value
-            dHeight = Math.round(cur.height * dWidth);
-            dWidth = Math.round(cur.width * dWidth);
+        if(rotation) {
+            //we must move to the center of what we are drawing,
+            //rotate
+            //move back to 0,0
+            //draw
+            //reset context so future things don't draw weird
+            //start by saving ctx so we can reset
+            Game.context.save();
+            //get the center of the image to draw
+            Game.context.translate(dx + cur.width/2, dy + cur.height/2);
+            //rotate
+            Game.context.rotate(angle);
+            //move back for draws
+            Game.context.translate( -(dx + cur.width/2), -(dy + cur.height/2));
+            //draw it
+            if(this.#centering) {
+                Game.context.drawImage(cur.img, (index%cur.cols)*cur.width, Math.floor(index/cur.cols)*cur.height, cur.width, cur.height, dx-dWidth/2, dy-dHeight/2, dWidth, dHeight);
+            } else {
+                Game.context.drawImage(cur.img, (index%cur.cols)*cur.width, Math.floor(index/cur.cols)*cur.height, cur.width, cur.height, dx, dy, dWidth, dHeight);
+            }
+            //reset
+            Game.context.restore();
         } else {
-            if(!dWidth){
-                dWidth = cur.width;
-            }
-            if(!dHeight){
-                dHeight = cur.height;
+            if(this.centering) {
+                Game.context.drawImage(cur.img, (index%cur.cols)*cur.width, Math.floor(index/cur.cols)*cur.height, cur.width, cur.height, dx-dWidth/2, dy-dHeight/2, dWidth, dHeight);
+            } else {
+                Game.context.drawImage(cur.img, (index%cur.cols)*cur.width, Math.floor(index/cur.cols)*cur.height, cur.width, cur.height, dx, dy, dWidth, dHeight);
             }
         }
-        //we must move to the center of what we are drawing,
-        //rotate
-        //move back to 0,0
-        //draw
-        //reset context so future things don't draw weird
-        //start by saving ctx so we can reset
-        this.ctx.save();
-        //get the center of the image to draw
-        this.ctx.translate(dx + cur.width/2, dy + cur.height/2);
-        //rotate
-        this.ctx.rotate(angle);
-        //move back for draws
-        this.ctx.translate( -(dx + cur.width/2), -(dy + cur.height/2));
-        //draw it
-        this.ctx.drawImage(cur.img, (index%cur.cols)*cur.width, Math.floor(index/cur.cols)*cur.height, cur.width, cur.height, dx, dy, dWidth, dHeight);
-        //reset
-        this.ctx.restore();
     }
 
     set whenFinishedLoading(callback) {
@@ -139,5 +131,13 @@ class SpriteSheetManager {
                 this.callback = undefined;
             }
         }
+    }
+
+    get centering() {
+        return this.#centering;
+    }
+
+    set centering(c) {
+        this.#centering = c;
     }
 }

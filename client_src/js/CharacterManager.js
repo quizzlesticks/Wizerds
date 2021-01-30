@@ -1,10 +1,8 @@
 class CharacterManager {
     #_char_list;
     #_id_list;
-    #_win;
     #player;
-    constructor(win) {
-        this.#_win = win;
+    constructor() {
         this.#_char_list = {};
     }
 
@@ -16,22 +14,21 @@ class CharacterManager {
         return this.#_char_list[id];
     }
 
-    addPlayerCharacter(socket_manager, player_class, x, y) {
+    addPlayerCharacter(player_class, x, y) {
         if(x == undefined || y == undefined) {
-            x = this.#_win.default_player_pos.x;
-            y = this.#_win.default_player_pos.y;
+            x = Game.default_player_pos.x;
+            y = Game.default_player_pos.y;
         }
-        this.#_char_list[socket_manager.id] = new CharacterController(this.#_win, socket_manager, player_class, x, y);
-        this.#player = this.#_char_list[socket_manager.id];
+        this.#_char_list[Game.socket.id] = new CharacterController(player_class, x, y);
+        this.#player = this.#_char_list[Game.socket.id];
     }
 
     addNetworkCharacter(player_class, id, x, y, last_state) {
         if(Object.keys(this.#_char_list).includes(id)){
             return;
         }
-        this.#_char_list[id] = new NetworkCharacterController(this.#_win, player_class, id, x, y);
+        this.#_char_list[id] = new NetworkCharacterController(player_class, id, x, y);
         this.updateNetworkCharactorPosition(id, last_state, {x: x, y: y});
-        return this.#_char_list[id];
     }
 
     updateNetworkCharactorPosition(id, last_state, pos){
@@ -55,11 +52,10 @@ class CharacterManager {
     }
 
     drawAllCharacters(id) {
-        const rp = win.relativeToCamera(this.#player.pos);
         var keys = Object.keys(this.#_char_list);
         for(var i = 0; i < keys.length; i++) {
             if(keys[i] != id){
-                this.#_char_list[keys[i]].draw(rp);
+                this.#_char_list[keys[i]].draw();
             }
         }
         this.#_char_list[id].draw();
