@@ -17,7 +17,7 @@ class BulletClass {
 
     constructor(profile) {
         this.#_animatable = new AnimatableClass(profile, 0, 0);
-        this.#_animatable.defineAnimationLoop(profile.animation.start, profile.animation.stop);
+        this.#_animatable.defineAnimationLoop(profile.animation);
         this.#_bounding_rectangle.top = this.#y - profile.sprite_height*profile.default_scale/2;
         this.#_bounding_rectangle.bottom = this.#y + profile.sprite_height*profile.default_scale/2;
         this.#_bounding_rectangle.left = this.#x - profile.sprite_width*profile.default_scale/2;

@@ -2,9 +2,9 @@ class AnimatableClass {
     //The _ leading char means it should be accessible in someway from outside
     //Everything else is explicitly private
     #_animation_profile;
-    #_animloop_start = 0;
+    #_animloop;
     #_animloop_cur = 0;
-    #_animloop_end = 0;
+    #_animloop_length = 0;
     #_frame_delay = 0;
     #_frame_delay_cur = 0;
     //This is in world space
@@ -47,21 +47,18 @@ class AnimatableClass {
         this.#rotation = r;
     }
 
-    defineAnimationLoop(start, end, currentIndex=-1) {
-        if(currentIndex == -1) {
-            currentIndex = start;
-        }
-        this.#_animloop_start = start;
-        this.#_animloop_cur = currentIndex;
-        this.#_animloop_end = end;
+    defineAnimationLoop(loop) {
+        this.#_animloop = loop;
+        this.#_animloop_length = loop.length;
+        this.#_animloop_cur = 0;
     }
 
     restartAnimationLoop() {
-        this.#_animloop_cur = this.#_animloop_start;
+        this.#_animloop_cur = 0;
     }
 
     defineAnimationLoopFromKey(key) {
-        this.defineAnimationLoop(this.#_animation_profile.animations[key].start, this.#_animation_profile.animations[key].stop);
+        this.defineAnimationLoop(this.#_animation_profile.animations[key]);
     }
 
     draw(index) {
@@ -70,26 +67,26 @@ class AnimatableClass {
     }
 
     drawNext() {
-        this.draw(this.#_animloop_cur);
+        this.draw(this.#_animloop[this.#_animloop_cur]);
         this.#_frame_delay_cur += 1;
         if(this.#_frame_delay_cur > this.#_frame_delay){
             this.#_animloop_cur += 1;
             this.#_frame_delay_cur = 0;
         }
-        if(this.#_animloop_cur > this.#_animloop_end){
-            this.#_animloop_cur = this.#_animloop_start;
+        if(this.#_animloop_cur == this.#_animloop_length){
+            this.#_animloop_cur = 0;
         }
     }
 
     drawPrev() {
-        this.draw(this.#_animloop_cur)
+        this.draw(this.#_animloop[this.#_animloop_cur])
         this.#_frame_delay_cur += 1;
         if(this.#_frame_delay_cur > this.#_frame_delay){
             this.#_animloop_cur -= 1;
             this.#_frame_delay_cur = 0;
         }
-        if(this.#_animloop_cur < this.#_animloop_start){
-            this.#_animloop_cur = this.#_animloop_start;
+        if(this.#_animloop_cur == -1){
+            this.#_animloop_cur = this.#_animloop_length-1;
         }
     }
 }

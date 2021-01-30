@@ -33,8 +33,8 @@ class SpriteSheetManager {
     #finished_loading = false;
     #finished_new_loading = false;
     #throwaway_callback = true;
+    #_SpriteSheetList = {};
     constructor(throwaway_callback = true) {
-        this.SpriteSheetList = new Map();
         this.imgLoaded = this.imgLoaded.bind(this);
         this.#throwaway_callback = throwaway_callback;
     }
@@ -59,7 +59,6 @@ class SpriteSheetManager {
             kk_array = Object.keys(AnimationProfiles.CharacterProfiles[k_array[i]])
             for(var j=0; j<kk_array.length; j++) {
                 this.loadFromProfile(AnimationProfiles.CharacterProfiles[k_array[i]][kk_array[j]]);
-
             }
         }
     }
@@ -76,17 +75,20 @@ class SpriteSheetManager {
     }
 
     load(filename, id, width, height, rows, cols) {
+        if(Object.keys(this.#_SpriteSheetList).includes(id)) {
+            return;
+        }
         this.#finished_loading = false;
         this.#loading_count += 1;
-        this.SpriteSheetList[id] = new SpriteSheet(filename, width, height, rows, cols, this.imgLoaded);
+        this.#_SpriteSheetList[id] = new SpriteSheet(filename, width, height, rows, cols, this.imgLoaded);
     }
 
     getSheet(id) {
-        return this.SpriteSheetList[id];
+        return this.#_SpriteSheetList[id];
     }
 
     drawSprite(id, index, dx, dy, rotation, dWidth = 0, dHeight = 0) {
-        const cur = this.SpriteSheetList[id];
+        const cur = this.#_SpriteSheetList[id];
         if(index >= cur.cols*cur.rows){
             throw new Error("Requested unobtainable sprite.");
         }

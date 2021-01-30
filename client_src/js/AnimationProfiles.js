@@ -10,12 +10,11 @@ const AnimationProfiles = {
                 sprite_rows: 1,
                 default_scale: 2,
                 frame_delay: 8,
-                animations: {"KeyS": {start: 0, stop: 1},
-                             "KeyD": {start: 2, stop: 3},
-                             "KeyA": {start: 4, stop: 5},
-                             "KeyW": {start: 6, stop: 7}}
+                animations: {"KeyS": [0, 1],
+                             "KeyD": [2, 3],
+                             "KeyA": [4, 5],
+                             "KeyW": [6, 7]}
             },
-
             Attack: {
                 id: "RedRidingHoodAttack",
                 filename: "/Spritesheets/RedRidingHoodAttack.png",
@@ -25,25 +24,24 @@ const AnimationProfiles = {
                 sprite_rows: 4,
                 default_scale: 2,
                 frame_delay: 8,
-                animations: {"KeyS": {start: 0, stop: 1},
-                             "KeyD": {start: 2, stop: 3},
-                             "KeyA": {start: 4, stop: 5},
-                             "KeyW": {start: 6, stop: 7}}
+                animations: {"KeyS": [0, 1],
+                             "KeyD": [2, 3],
+                             "KeyA": [4, 5],
+                             "KeyW": [6, 7]}
             },
-
             Idle: {
-                id: "RedRidingHoodIdle",
-                filename: "/Spritesheets/RedRidingHoodIdle.png",
+                id: "RedRidingHoodMove",
+                filename: "/Spritesheets/RedRidingHoodMovement.png",
                 sprite_width: 34,
                 sprite_height: 34,
                 sprite_columns: 4,
                 sprite_rows: 1,
                 default_scale: 2,
                 frame_delay: 8,
-                animations: {"KeyS": {start: 0, stop: 0},
-                             "KeyD": {start: 1, stop: 1},
-                             "KeyA": {start: 2, stop: 2},
-                             "KeyW": {start: 3, stop: 3}},
+                animations: {"KeyS": [0],
+                             "KeyD": [1],
+                             "KeyA": [2],
+                             "KeyW": [3]},
             }
         },
 
@@ -57,12 +55,11 @@ const AnimationProfiles = {
                 sprite_rows: 4,
                 default_scale: 2,
                 frame_delay: 8,
-                animations: {"KeyS": {start: 1, stop: 2},
-                             "KeyD": {start: 4, stop: 5},
-                             "KeyA": {start: 7, stop: 8},
-                             "KeyW": {start: 10, stop: 11}}
+                animations: {"KeyS": [1, 2],
+                             "KeyD": [4, 5],
+                             "KeyA": [7, 8],
+                             "KeyW": [10, 11]}
             },
-
             Attack: {
                 id: "SciGuyAttack",
                 filename: "/Spritesheets/SciGuyAttack.png",
@@ -72,25 +69,24 @@ const AnimationProfiles = {
                 sprite_rows: 4,
                 default_scale: 2,
                 frame_delay: 8,
-                animations: {"KeyS": {start: 0, stop: 1},
-                             "KeyD": {start: 2, stop: 3},
-                             "KeyA": {start: 4, stop: 5},
-                             "KeyW": {start: 6, stop: 7}}
+                animations: {"KeyS": [0, 1],
+                             "KeyD": [2, 3],
+                             "KeyA": [4, 5],
+                             "KeyW": [6, 7]}
             },
-
             Idle: {
-                id: "SciGuyIdle",
+                id: "SciGuyMove",
                 sprite_width: 34,
                 sprite_height: 34,
                 sprite_columns: 4,
                 sprite_rows: 1,
                 default_scale: 2,
                 frame_delay: 8,
-                filename: "/Spritesheets/SciGuyIdle.png",
-                animations: {"KeyS": {start: 0, stop: 0},
-                              "KeyD": {start: 1, stop: 1},
-                              "KeyA": {start: 2, stop: 2},
-                              "KeyW": {start: 3, stop: 3}}
+                filename: "/Spritesheets/SciGuyMovement.png",
+                animations: {"KeyS": [0],
+                              "KeyD": [1],
+                              "KeyA": [2],
+                              "KeyW": [3]}
             }
         }
     },
@@ -105,7 +101,54 @@ const AnimationProfiles = {
             frame_delay: 3,
             default_scale: 1.2,
             filename: "/Spritesheets/BlueBullet.png",
-            animation: {start: 0, stop: 3}
+            animation: [0, 3]
+        }
+    },
+
+    EnemyProfiles: {
+        BlueSlime: {
+            Move: {
+                id: "BlueSlimeMove",
+                filename: "/Spritesheets/BlueSlimeMove.png",
+                sprite_width: 32,
+                sprite_height: 27,
+                sprite_columns: 4,
+                sprite_rows: 4,
+                default_scale: 2,
+                frame_delay: 8,
+                animations: {"KeyS": [0, 1, 2, 3],
+                             "KeyD": [4, 5, 6, 7],
+                             "KeyA": [8, 9, 10, 11],
+                             "KeyW": [12, 13, 14, 15, 16]}
+            },
+            Attack: {
+                id: "BlueSlimeIdle",
+                filename: "/Spritesheets/BlueSlimeIdle.png",
+                sprite_width: 32,
+                sprite_height: 27,
+                sprite_columns: 2,
+                sprite_rows: 4,
+                default_scale: 2,
+                frame_delay: 14,
+                animations: {"KeyS": [0, 1],
+                             "KeyD": [2, 3],
+                             "KeyA": [4, 5],
+                             "KeyW": [6, 7]}
+            },
+            Idle: {
+                id: "BlueSlimeIdle",
+                sprite_width: 32,
+                sprite_height: 27,
+                sprite_columns: 2,
+                sprite_rows: 4,
+                default_scale: 2,
+                frame_delay: 7,
+                filename: "/Spritesheets/BlueSlimeIdle.png",
+                animations: {"KeyS": [0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1],
+                              "KeyD": [2, 3, 2, 3, 2, 3, 2, 3, 3, 3, 3, 3, 3],
+                              "KeyA": [4, 5, 4, 5, 4, 5, 4, 5, 5, 5, 5, 5, 5],
+                              "KeyW": [6, 7, 6, 7, 6, 7, 6, 7, 7, 7, 7, 7, 7]}
+            }
         }
     }
 }
