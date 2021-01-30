@@ -1,0 +1,6 @@
+class SlimeClass {
+    constructor() {
+
+    }
+
+}
