@@ -1,22 +1,20 @@
 class AnimatableClass {
     //The _ leading char means it should be accessible in someway from outside
     //Everything else is explicitly private
-    #_ssm;
     #_animation_profile;
     #_animloop_start = 0;
     #_animloop_cur = 0;
     #_animloop_end = 0;
     #_frame_delay = 0;
     #_frame_delay_cur = 0;
-    #position = { real: {x: undefined, y: undefined},
-                  centered: {x: undefined, y: undefined}
-                };
+    //This is in world space
+    #position = {x: undefined, y: undefined};
+    #rotation = 0;
     #_x_centering_offset;
     #_y_centering_offset;
     #scale;
 
-    constructor(ssm, animation_profile, px, py, scale=0) {
-        this.#_ssm = ssm;
+    constructor(animation_profile, px, py, scale=0) {
         this.#_animation_profile = animation_profile;
         this.#_frame_delay = this.#_animation_profile.frame_delay;
         if(!scale){
@@ -29,47 +27,24 @@ class AnimatableClass {
         this.y = py;
     }
 
-    set scale(s) {
-        this.#scale = s;
-    }
-
-    get scale() {
-        return this.#scale;
-    }
-
-    get real_x() {
-        return this.#position.real.x;
-    }
-
-    get real_y() {
-        return this.#position.real.y;
-    }
-
-    get x() {
-        return this.#position.centered.x;
-    }
-
-    get y() {
-        return this.#position.centered.y;
-    }
-
     set x(x) {
-        this.#position.centered.x = x;
-        this.#position.real.x = x - this.#_x_centering_offset;
+        this.#position.x = x;
     }
 
     set y(y) {
-        this.#position.centered.y = y;
-        this.#position.real.y = y - this.#_y_centering_offset;
+        this.#position.y = y;
     }
 
-    set pos(p) {
-        this.x = p.x;
-        this.y = p.y;
+    get x() {
+        return this.#position.x;
     }
 
-    get pos() {
-        return {x: this.x, y: this.y};
+    get y() {
+        return this.#position.y;
+    }
+
+    set rotation(r) {
+        this.#rotation = r;
     }
 
     defineAnimationLoop(start, end, currentIndex=-1) {
@@ -86,24 +61,13 @@ class AnimatableClass {
     }
 
     draw(index) {
-        this.#_ssm.drawSprite(this.#_animation_profile.id, index, this.real_x, this.real_y, this.#scale);
-    }
-
-    drawNextRelative(rx, ry) {
-        //this.#_ssm.drawSprite(this.#_animation_profile.id, this.#_animloop_cur, this.real_x, this.real_y, this.#scale);
-        this.#_ssm.drawSprite(this.#_animation_profile.id, this.#_animloop_cur, this.x + rx - this.#_x_centering_offset, this.y + ry - this.#_y_centering_offset, this.#scale);
-        this.#_frame_delay_cur += 1;
-        if(this.#_frame_delay_cur > this.#_frame_delay){
-            this.#_animloop_cur += 1;
-            this.#_frame_delay_cur = 0;
-        }
-        if(this.#_animloop_cur > this.#_animloop_end){
-            this.#_animloop_cur = this.#_animloop_start;
-        }
+        //we must translate to screen space
+        const sp = Game.worldToScreenSpace({x: this.x, y: this.y});
+        Game.ssm.drawSprite(this.#_animation_profile.id, index, sp.x, sp.y, this.#rotation, this.#scale);
     }
 
     drawNext() {
-        this.#_ssm.drawSprite(this.#_animation_profile.id, this.#_animloop_cur, this.real_x, this.real_y, this.#scale);
+        this.draw(this.#_animloop_cur);
         this.#_frame_delay_cur += 1;
         if(this.#_frame_delay_cur > this.#_frame_delay){
             this.#_animloop_cur += 1;
@@ -115,7 +79,7 @@ class AnimatableClass {
     }
 
     drawPrev() {
-        this.#_ssm.drawSprite(this.#_animation_profile.id, this.#_animloop_cur, this.#position.real.x, this.#position.real.y, this.#scale);
+        Game.ssm.drawSprite(this.#_animation_profile.id, this.#_animloop_cur, this.#position.real.x, this.#position.real.y, this.#scale);
         this.#_animloop_cur -= 1;
         if(this.#_animloop_cur < this.#_animloop_start){
             this.#_animloop_cur = this.#_animloop_end;
@@ -128,19 +92,17 @@ class CharacterAnimatable {
     #_move;
     #_attack;
     #_cur_animatable;
-    #last_state = {state: "idle", key: "KeyS"};
+    #last_state = {state: "idle", key: "KeyS"}; //idle, attack, move + key
 
-    #_win;
-    constructor(win, player_class, px, py, scale=0) {
-        this.#_win = win;
+    constructor(player_class, px, py, scale=0) {
         var animation_super_profile;
         if(!(animation_super_profile = AnimationProfiles.CharacterClasses[player_class])) {
             throw new Error("Trying to load unloadable class.");
             return undefined;
         }
-        this.#_idle = new AnimatableClass(this.#_win.ssm, animation_super_profile.Idle, px, py, scale);
-        this.#_move = new AnimatableClass(this.#_win.ssm, animation_super_profile.Move, px, py, scale);
-        this.#_attack = new AnimatableClass(this.#_win.ssm, animation_super_profile.Attack, px, py, scale);
+        this.#_idle = new AnimatableClass(animation_super_profile.Idle, px, py, scale);
+        this.#_move = new AnimatableClass(animation_super_profile.Move, px, py, scale);
+        this.#_attack = new AnimatableClass(animation_super_profile.Attack, px, py, scale);
         this.#_cur_animatable = this.#_idle;
     }
 
@@ -148,13 +110,8 @@ class CharacterAnimatable {
         return this.#last_state;
     }
 
-    draw(p=undefined) {
-        if(!p) {
-            this.#_cur_animatable.drawNext();
-        }
-        if(p) {
-            this.#_cur_animatable.drawNextRelative(p.x,p.y);
-        }
+    draw() {
+        this.#_cur_animatable.drawNext();
     }
 
     animate(type, key) {

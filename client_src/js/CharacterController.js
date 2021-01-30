@@ -5,27 +5,22 @@ class CharacterController{
                "KeyW": false};
 
     #_mousedown = false;
-    #pos = {x: undefined, y: undefined};
-
-    #_mouse_zoning = {slope: undefined, top_b: undefined, bottom_b: undefined};
-
-    #_win;
+    #position = {x: undefined, y: undefined};
 
     #_animator;
 
-    #_socket_manager;
-
     #_speed = 6; //4
+    #_dexterity = 30;
+    #_dexterity_counter = 0;
+    #_projectile_speed = 8;
+    #_projectile_lifetime = 120;
+    #_attack_min = 10;
+    #_attack_max = 20;
 
-    constructor(window_manager, socket_manager, player_class, x, y, scale=0) {
-        this.#_win = window_manager;
-        this.#_socket_manager = socket_manager;
+    constructor(player_class, x, y, scale=0) {
+        this.#_animator = new CharacterAnimatable(player_class, this.x, this.y);
         this.x = x;
         this.y = y;
-        this.#_animator = new CharacterAnimatable(window_manager, player_class, this.#_win.camera_pos.x, this.#_win.camera_pos.y);
-        this.#_mouse_zoning.slope = this.#_win.player_space_height/this.#_win.player_space_width;
-        this.#_mouse_zoning.top_b = this.#_win.camera_pos.y - this.#_mouse_zoning.slope * this.#_win.camera_pos.x;
-        this.#_mouse_zoning.bottom_b = this.#_win.camera_pos.y + this.#_mouse_zoning.slope * this.#_win.camera_pos.x - this.#_win.player_space_height;
         this.updateAnimation = this.updateAnimation.bind(this);
         this.draw = this.draw.bind(this);
         window.addEventListener("keydown", this.updateAnimation);
@@ -36,30 +31,32 @@ class CharacterController{
     }
 
     get x() {
-        return this.#pos.x;
+        return this.#position.x;
     }
 
     get y() {
-        return this.#pos.y;
+        return this.#position.y;
     }
 
-    get pos() {
-        return this.#pos;
+    get position() {
+        return this.#position;
     }
 
     set x(x) {
-        this.#pos.x = x;
-        //this.#_animator.x = x;
+        this.#position.x = x;
+        Game.camera_position_world_x = x;
+        this.#_animator.x = x;
     }
 
     set y(y) {
-        this.#pos.y = y;
-        //this.#_animator.y = y;
+        this.#position.y = y;
+        Game.camera_position_world_y = y;
+        this.#_animator.y = y;
     }
 
-    set pos(p) {
-        this.#pos = p;
-        //this.#_animator.pos = p;
+    set position(p) {
+        this.x = p.x;
+        this.y = p.y;
     }
 
     //returns the position that the player will have after
@@ -85,7 +82,8 @@ class CharacterController{
     #_last_y_sent = undefined;
     #_last_state_sent = undefined;
     #_last_key_sent = undefined;
-    draw() {
+    #_last_mousedown_position = {x: undefined, y: undefined};
+    updatePlayerPosition() {
         if(this.#_key_states["KeyA"]) {
             this.x -= this.#_speed;
         }
@@ -98,48 +96,94 @@ class CharacterController{
         if(this.#_key_states["KeyW"]) {
             this.y -= this.#_speed;
         }
-        this.#_animator.draw();
 
         var last_state = this.#_animator.last_state;
-        if(this.pos.x != this.#_last_x_sent || this.pos.y != this.#_last_y_sent || last_state.state != this.#_last_state_sent || last_state.key != this.#_last_key_sent) {
-            this.#_socket_manager.sendPlayerPos(this.pos, this.#_animator.last_state);
-            this.#_last_x_sent = this.pos.x;
-            this.#_last_y_sent = this.pos.y;
+        if(this.x != this.#_last_x_sent || this.y != this.#_last_y_sent || last_state.state != this.#_last_state_sent || last_state.key != this.#_last_key_sent) {
+            Game.socket.sendPlayerPos(this.position, this.#_animator.last_state);
+            this.#_last_x_sent = this.x;
+            this.#_last_y_sent = this.y;
             this.#_last_state_sent = last_state.state;
             this.#_last_key_sent = last_state.key;
         }
-        if(this.#_win.debug) {
-            //intersecting lines on player
-            var ctx = this.#_win.context;
-            ctx.save();
-            ctx.beginPath();
-            ctx.strokeStyle = "#ff0000";
-            ctx.moveTo(0,this.#topZoningLine(0));
-            ctx.lineTo(this.#_win.player_space_width, this.#topZoningLine(this.#_win.player_space_width));
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.strokeStyle = "#0000ff";
-            ctx.moveTo(0,this.#bottomZoningLine(0));
-            ctx.lineTo(this.#_win.player_space_width, this.#bottomZoningLine(this.#_win.player_space_width));
-            ctx.stroke();
-            //shows keys
-            ctx.beginPath();
-            ctx.strokeStyle = "black";
-            ctx.fillStyle = "black";
-            ctx.strokeRect(70, 10, 50, 50);
-            if(this.#_key_states["KeyW"])
-                ctx.fillRect(70, 10, 50, 50);
-            ctx.strokeRect(10, 70, 50, 50);
-            if(this.#_key_states["KeyA"])
-                ctx.fillRect(10, 70, 50, 50);
-            ctx.strokeRect(70, 70, 50, 50);
-            if(this.#_key_states["KeyS"])
-                ctx.fillRect(70, 70, 50, 50);
-            ctx.strokeRect(130, 70, 50, 50);
-            if(this.#_key_states["KeyD"])
-                ctx.fillRect(130, 70, 50, 50);
-            ctx.restore();
+    }
+
+    draw() {
+
+        this.#_animator.draw();
+
+        if(this.#_animator.last_state == "attack") {
+            //we need to do this:
+            //dex roll (check if counter == dex)
+            //BUT dex roll needs to always count to dex after a fire so
+            //that rapid clicking is not faster than holding down
+            //if so fire bullet
+            //  the boolet will get information from the firer
+            //  i.e the lifetime of the bootlet
+            //      the attack damage of the bootlet
+            //      the speed of the boooolet
+            //      whether the boolet pierces
+            //      other special properties
+            //      angle of travel
+            //      bullet positionition
+            //  we just have to generate this information
+            //  we will pass it to the bullet pool which will draw Everything
+            //  and find a bullet etc.
+            //fire on zero so we always fire first count second
+            if(this.#_dexterity_counter == 0){
+                //fire
+                const angle = Game.mouseTangent(this.#_last_mousedown_position);
+                const pos_x = this.x;
+                const pos_y = this.y;
+                const speed_x = this.#_projectile_speed*Math.cos(angle);
+                const speed_y = this.#_projectile_speed*Math.sin(angle);
+                const damage = this.#_attack_min + Math.random()*(this.#_attack_max-this.#_attack_min);
+                Game.bullet_pool.fire(angle, pos_x, pos_y, speed_x, speed_y, damage, this.#_projectile_lifetime, true);
+            }
+            this.#_dexterity_counter++;
+            if(this.#_dexterity_counter == this.#_dexterity) {
+                this.#_dexterity_counter = 0;
+            }
+
+        } else if( this.#_dexterity_counter != 0) {
+            //this solves the issue of rolling the dex counter even when we arent
+            //attacking
+            this.#_dexterity_counter++;
+            if(this.#_dexterity_counter == this.#_dexterity) {
+                this.#_dexterity_counter = 0;
+            }
         }
+        // if(Game.debug) {
+        //     //intersecting lines on player
+        //     var ctx = Game.context;
+        //     ctx.save();
+        //     ctx.beginPath();
+        //     ctx.strokeStyle = "#ff0000";
+        //     ctx.moveTo(0,this.#topZoningLine(0));
+        //     ctx.lineTo(Game.player_space_width, this.#topZoningLine(Game.player_space_width));
+        //     ctx.stroke();
+        //     ctx.beginPath();
+        //     ctx.strokeStyle = "#0000ff";
+        //     ctx.moveTo(0,this.#bottomZoningLine(0));
+        //     ctx.lineTo(Game.player_space_width, this.#bottomZoningLine(Game.player_space_width));
+        //     ctx.stroke();
+        //     //shows keys
+        //     ctx.beginPath();
+        //     ctx.strokeStyle = "black";
+        //     ctx.fillStyle = "black";
+        //     ctx.strokeRect(70, 10, 50, 50);
+        //     if(this.#_key_states["KeyW"])
+        //         ctx.fillRect(70, 10, 50, 50);
+        //     ctx.strokeRect(10, 70, 50, 50);
+        //     if(this.#_key_states["KeyA"])
+        //         ctx.fillRect(10, 70, 50, 50);
+        //     ctx.strokeRect(70, 70, 50, 50);
+        //     if(this.#_key_states["KeyS"])
+        //         ctx.fillRect(70, 70, 50, 50);
+        //     ctx.strokeRect(130, 70, 50, 50);
+        //     if(this.#_key_states["KeyD"])
+        //         ctx.fillRect(130, 70, 50, 50);
+        //     ctx.restore();
+        // }
     }
 
     #_zone = undefined;
@@ -149,14 +193,15 @@ class CharacterController{
         }
         if(event.type == "mousedown") {
             this.#_mousedown = true;
-            this.#_zone = this.#findMouseZone(this.#_win.mouseToCanvas({x: event.clientX, y: event.clientY}));
+            this.#_last_mousedown_position = Game.mouseToScreenSpace({x: event.clientX, y: event.clientY});
+            this.#_zone = Game.mouseZone(this.#_last_mousedown_position);
             this.#_animator.animate("attack", this.#_zone);
             return;
         }
         if(this.#_mousedown) {
             if(event.type == "mousemove") {
-                var mp = this.#_win.mouseToCanvas({x: event.clientX, y: event.clientY});
-                var zone = this.#findMouseZone(mp);
+                this.#_last_mousedown_position = Game.mouseToScreenSpace({x: event.clientX, y: event.clientY});
+                var zone = Game.mouseZone(this.#_last_mousedown_position);
                 if(zone != this.#_zone) {
                     this.#_animator.animate("attack", zone);
                     this.#_zone = zone;
@@ -194,98 +239,58 @@ class CharacterController{
             this.#_animator.animate("idle", event.code);
         }
     }
-
-    #findMouseZone(mp) {
-        //If we are exactly on the player return zone 0 (right)
-        if(mp.x == this.x && mp.y == this.y){
-            return "KeyD";
-        }
-        //If we are under the top line (positive for canvas, in standard cartesian this is the one with negative slope and we are 'under' it)
-        if(mp.y >= this.#topZoningLine(mp.x)) {
-            //then we are in either zone 2 or 3
-            //If we are under the bottom line
-            if(mp.y >= this.#bottomZoningLine(mp.x)) {
-                //We are in zone 3
-                return "KeyS";
-            } else {
-                //Otherwise we must be in zone 2
-                return "KeyA";
-            }
-        } else {
-            //Otherwise we are in either zone 0 or 1
-            //If we are under the bottom line
-            if(mp.y >= this.#bottomZoningLine(mp.x)) {
-                //We are in zone 0
-                return "KeyD";
-            } else {
-                //Otherwise we are in zone 1
-                return "KeyW";
-            }
-        }
-    }
-
-    #topZoningLine(x) {
-        return this.#_mouse_zoning.slope*x + this.#_mouse_zoning.top_b;
-    }
-
-    #bottomZoningLine(x) {
-        return this.#_win.player_space_height - this.#_mouse_zoning.slope*x + this.#_mouse_zoning.bottom_b;
-    }
 }
 
 class NetworkCharacterController{
     #_mousedown = false;
-    #pos = {x: undefined, y: undefined};
-
-    #_win;
+    #position = {x: undefined, y: undefined};
 
     #_animator;
 
-    constructor(window_manager, player_class, id, x=0, y=0, scale=0) {
-        this.#_win = window_manager;
+    constructor(player_class, id, x=0, y=0, scale=0) {
         if(!x && !y) {
-            x = this.#_win.player_space_width/2;
-            y = this.#_win.player_space_height/2;
+            x = Game.default_player_position.x;
+            y = Game.default_player_position.y;
         }
-        this.#_animator = new CharacterAnimatable(window_manager, player_class, x, y);
+        this.#_animator = new CharacterAnimatable(player_class, x, y);
         this.x = x;
         this.y = y;
         this.draw = this.draw.bind(this);
     }
 
     get x() {
-        return this.#pos.x;
+        return this.#position.x;
     }
 
     get y() {
-        return this.#pos.y;
+        return this.#position.y;
     }
 
-    get pos() {
-        return this.#pos;
+    get position() {
+        return this.#position;
     }
 
     set x(x) {
-        this.#pos.x = x;
+        this.#position.x = x;
         this.#_animator.x = x;
     }
 
     set y(y) {
-        this.#pos.y = y;
+        this.#position.y = y;
         this.#_animator.y = y;
     }
 
-    set pos(p) {
-        this.#pos = p;
-        this.#_animator.pos = p;
+    set position(p) {
+        this.x = p.x;
+        this.y = p.y;
     }
 
-    draw(p) {
-        this.#_animator.draw(p);
+    draw() {
+        this.#_animator.draw();
     }
 
     updateAnimationAndPosition(last_state, pos) {
         this.#_animator.animate(last_state.state, last_state.key);
-        this.pos = pos;
+        this.position = pos;
     }
 }
