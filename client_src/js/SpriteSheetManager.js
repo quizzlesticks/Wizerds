@@ -76,7 +76,7 @@ class SpriteSheetManager {
     }
 
     drawSprite(id, index, dx, dy, dWidth = 0, dHeight = 0) {
-        var cur = this.SpriteSheetList[id];
+        const cur = this.SpriteSheetList[id];
         if(index >= cur.cols*cur.rows){
             throw new Error("Requested unobtainable sprite.");
         }
@@ -93,6 +93,42 @@ class SpriteSheetManager {
             }
         }
         this.ctx.drawImage(cur.img, (index%cur.cols)*cur.width, Math.floor(index/cur.cols)*cur.height, cur.width, cur.height, dx, dy, dWidth, dHeight);
+    }
+
+    drawRotatedSprite(id, index, dx, dy, angle, dWidth=0, dHeight=0){
+        const cur = this.SpriteSheetList[id];
+        if(index >= cur.cols*cur.rows){
+            throw new Error("Requested unobtainable sprite.");
+        }
+        if(!dHeight && dWidth){
+            //If only one scaling attribute is given take it as a scaling value
+            dHeight = Math.round(cur.height * dWidth);
+            dWidth = Math.round(cur.width * dWidth);
+        } else {
+            if(!dWidth){
+                dWidth = cur.width;
+            }
+            if(!dHeight){
+                dHeight = cur.height;
+            }
+        }
+        //we must move to the center of what we are drawing,
+        //rotate
+        //move back to 0,0
+        //draw
+        //reset context so future things don't draw weird
+        //start by saving ctx so we can reset
+        this.ctx.save();
+        //get the center of the image to draw
+        this.ctx.translate(dx + cur.width/2, dy + cur.height/2);
+        //rotate
+        this.ctx.rotate(angle);
+        //move back for draws
+        this.ctx.translate( -(dx + cur.width/2), -(dy + cur.height/2));
+        //draw it
+        this.ctx.drawImage(cur.img, (index%cur.cols)*cur.width, Math.floor(index/cur.cols)*cur.height, cur.width, cur.height, dx, dy, dWidth, dHeight);
+        //reset
+        this.ctx.restore();
     }
 
     set whenFinishedLoading(callback) {

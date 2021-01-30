@@ -16,6 +16,7 @@ class WindowManager {
     #num_tiles_horizontal;
     #num_tiles_vertical;
     #default_player_pos = {x: 7000, y: 12100};
+    #bullet_pool = new BulletPool();
 
     constructor(width=1000, height=800, gui_width=250, smoothing=false) {
         this.#_canvas = document.getElementById('canvas');
@@ -60,6 +61,10 @@ class WindowManager {
     	this.#_context.textAlign = "center";
         this.#_context.fillStyle = this.#menu_text_color;
         this.#_context.strokeStyle = this.#menu_text_color;
+    }
+
+    get bullet_pool() {
+        return this.#bullet_pool;
     }
 
     get menu_background_color() {
@@ -167,5 +172,14 @@ class WindowManager {
 
     positionToMapPosition(pos) {
         return {x: pos.x/this.#tile_size, y: pos.y/this.#tile_size};
+    }
+
+    mouseTangent(mouse_pos) {
+        //rotate uses radians so use radians
+        //Math.atan2 also returns the angle in radians :o perfect
+        //atan2 uses (0,0) as a center so center the mouse to camera_pos
+        const x = mouse_pos.x - this.#camera_pos.x;
+        const y = mouse_pos.y - this.#camera_pos.y;
+        return Math.atan2(y,x);
     }
 }

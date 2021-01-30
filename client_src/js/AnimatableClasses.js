@@ -91,7 +91,7 @@ class AnimatableClass {
 
     drawNextRelative(rx, ry) {
         //this.#_ssm.drawSprite(this.#_animation_profile.id, this.#_animloop_cur, this.real_x, this.real_y, this.#scale);
-        this.#_ssm.drawSprite(this.#_animation_profile.id, this.#_animloop_cur, this.x + rx - this.#_x_centering_offset, this.y + ry - this.#_y_centering_offset, this.#scale);
+        this.#_ssm.drawSprite(this.#_animation_profile.id, this.#_animloop_cur, this.#position.real.x + rx, this.#position.real.y + ry, this.#scale);
         this.#_frame_delay_cur += 1;
         if(this.#_frame_delay_cur > this.#_frame_delay){
             this.#_animloop_cur += 1;
@@ -104,6 +104,18 @@ class AnimatableClass {
 
     drawNext() {
         this.#_ssm.drawSprite(this.#_animation_profile.id, this.#_animloop_cur, this.real_x, this.real_y, this.#scale);
+        this.#_frame_delay_cur += 1;
+        if(this.#_frame_delay_cur > this.#_frame_delay){
+            this.#_animloop_cur += 1;
+            this.#_frame_delay_cur = 0;
+        }
+        if(this.#_animloop_cur > this.#_animloop_end){
+            this.#_animloop_cur = this.#_animloop_start;
+        }
+    }
+
+    drawNextRotate(rad) {
+        this.#_ssm.drawSprite(this.#_animation_profile.id, this.#_animloop_cur, this.real.x, this.real.y, this.#scale);
         this.#_frame_delay_cur += 1;
         if(this.#_frame_delay_cur > this.#_frame_delay){
             this.#_animloop_cur += 1;
@@ -128,7 +140,7 @@ class CharacterAnimatable {
     #_move;
     #_attack;
     #_cur_animatable;
-    #last_state = {state: "idle", key: "KeyS"};
+    #last_state = {state: "idle", key: "KeyS"}; //idle, attack, move + key
 
     #_win;
     constructor(win, player_class, px, py, scale=0) {

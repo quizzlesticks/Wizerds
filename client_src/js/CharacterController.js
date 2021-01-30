@@ -16,6 +16,12 @@ class CharacterController{
     #_socket_manager;
 
     #_speed = 6; //4
+    #_dexterity = 30;
+    #_dexterity_counter = 0;
+    #_projectile_speed = 8;
+    #_projectile_lifetime = 120;
+    #_attack_min = 10;
+    #_attack_max = 20;
 
     constructor(window_manager, socket_manager, player_class, x, y, scale=0) {
         this.#_win = window_manager;
@@ -85,6 +91,7 @@ class CharacterController{
     #_last_y_sent = undefined;
     #_last_state_sent = undefined;
     #_last_key_sent = undefined;
+    #_last_mousedown_pos = {x: undefined, y: undefined};
     draw() {
         if(this.#_key_states["KeyA"]) {
             this.x -= this.#_speed;
@@ -107,6 +114,47 @@ class CharacterController{
             this.#_last_y_sent = this.pos.y;
             this.#_last_state_sent = last_state.state;
             this.#_last_key_sent = last_state.key;
+        }
+        if(last_state.state == "attack") {
+            //we need to do this:
+            //dex roll (check if counter == dex)
+            //BUT dex roll needs to always count to dex after a fire so
+            //that rapid clicking is not faster than holding down
+            //if so fire bullet
+            //  the boolet will get information from the firer
+            //  i.e the lifetime of the bootlet
+            //      the attack damage of the bootlet
+            //      the speed of the boooolet
+            //      whether the boolet pierces
+            //      other special properties
+            //      angle of travel
+            //      bullet position
+            //  we just have to generate this information
+            //  we will pass it to the bullet pool which will draw Everything
+            //  and find a bullet etc.
+            //fire on zero so we always fire first count second
+            if(this.#_dexterity_counter == 0){
+                //fire
+                const angle = this.#_win.mouseTangent(this.#_last_mousedown_pos);
+                const pos_x = this.#_win.camera_pos.x;
+                const pos_y = this.#_win.camera_pos.y;
+                const speed_x = this.#_projectile_speed*Math.cos(angle);
+                const speed_y = this.#_projectile_speed*Math.sin(angle);
+                const damage = this.#_attack_min + Math.random()*(this.#_attack_max-this.#_attack_min);
+                this.#_win.bullet_pool.fire(angle, pos_x, pos_y, speed_x, speed_y, damage, this.#_projectile_lifetime, true);
+            }
+            this.#_dexterity_counter++;
+            if(this.#_dexterity_counter == this.#_dexterity) {
+                this.#_dexterity_counter = 0;
+            }
+
+        } else if( this.#_dexterity_counter != 0) {
+            //this solves the issue of rolling the dex counter even when we arent
+            //attacking
+            this.#_dexterity_counter++;
+            if(this.#_dexterity_counter == this.#_dexterity) {
+                this.#_dexterity_counter = 0;
+            }
         }
         if(this.#_win.debug) {
             //intersecting lines on player
@@ -149,14 +197,15 @@ class CharacterController{
         }
         if(event.type == "mousedown") {
             this.#_mousedown = true;
-            this.#_zone = this.#findMouseZone(this.#_win.mouseToCanvas({x: event.clientX, y: event.clientY}));
+            this.#_last_mousedown_pos = this.#_win.mouseToCanvas({x: event.clientX, y: event.clientY});
+            this.#_zone = this.#findMouseZone(this.#_last_mousedown_pos);
             this.#_animator.animate("attack", this.#_zone);
             return;
         }
         if(this.#_mousedown) {
             if(event.type == "mousemove") {
-                var mp = this.#_win.mouseToCanvas({x: event.clientX, y: event.clientY});
-                var zone = this.#findMouseZone(mp);
+                this.#_last_mousedown_pos = this.#_win.mouseToCanvas({x: event.clientX, y: event.clientY});
+                var zone = this.#findMouseZone(this.#_last_mousedown_pos);
                 if(zone != this.#_zone) {
                     this.#_animator.animate("attack", zone);
                     this.#_zone = zone;

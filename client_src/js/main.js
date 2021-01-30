@@ -50,7 +50,10 @@ function animate() {
     map.draw(up);
     cm.drawAllCharacters(sock.id);
     gui.draw();
-    ssm.drawSprite("bow",0,win.player_space_width+25,600);
+    const mousepos = cm.player.last_mouse;
+    const angle = Math.atan2(mousepos.y-win.camera_pos.y, mousepos.x-win.camera_pos.x);
+    console.log(angle);
+    ssm.drawRotatedSprite("bow",0,win.player_space_width+25,600,angle);
     ssm.drawSprite("bow",0,win.player_space_width+25+50,600);
     ssm.drawSprite("bow",0,win.player_space_width+25+100,600);
     ssm.drawSprite("bow",0,win.player_space_width+25+150,600);
