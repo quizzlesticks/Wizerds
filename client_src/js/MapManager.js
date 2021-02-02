@@ -1,4 +1,4 @@
-class MapManager {
+module.exports = class MapManager {
 
 	#_deli;
 	#_path = {deli: undefined, voronoi: undefined};

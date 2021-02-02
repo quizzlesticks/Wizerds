@@ -3,6 +3,8 @@ const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
+const map = require("../client_src/js/MapManager.js");
+console.log(map);
 
 const connected_users = {};
 var connected_users_count = 0;
@@ -61,3 +63,9 @@ io.on('connection', (socket) => {
 http.listen(3000, () => {
   console.log('listening on *:3000');
 });
+
+setInterval(loop, 200);
+
+function loop() {
+
+}
